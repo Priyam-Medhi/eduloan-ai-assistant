@@ -1,0 +1,216 @@
+{
+  "name": "EduLoan AI Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1eS0PaPLuufmxgp4ztalusPaRDP4zDveCT8HbtwJ4YxU",
+          "mode": "list",
+          "cachedResultName": "Education Loan Document Submission",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eS0PaPLuufmxgp4ztalusPaRDP4zDveCT8HbtwJ4YxU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2023597782,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eS0PaPLuufmxgp4ztalusPaRDP4zDveCT8HbtwJ4YxU/edit#gid=2023597782"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "27acbed0-7e05-4917-9500-6b41640e6dfa",
+      "name": "Form Submission Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "KbdPvKVcVX8sBe6O",
+          "name": "Google Sheets Trigger OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const requiredDocs = [\n  \"Aadhaar Card\",\n  \"PAN Card\",\n  \"Admission Letter\",\n  \"Fee Structure\",\n  \"Income Certificate\",\n  \"Passport Photo\",\n  \"Bank Passbook\"\n];\n\nconst uploadedDocsString =\n  $json[\"  Which documents have you uploaded?  \"] || \"\";\n\nconst uploadedDocs = uploadedDocsString\n  .split(\",\")\n  .map(doc => doc.trim());\n\nconst missingDocs = requiredDocs.filter(\n  doc => !uploadedDocs.includes(doc)\n);\n\nreturn {\n  studentName: $json[\"Full Name \"],\n  email: $json[\"Email Address\"],\n  college: $json[\"  College Name  \"],\n  course: $json[\"Course\"],\n  uploadedDocuments: uploadedDocs,\n  missingDocuments: missingDocs,\n  status: missingDocs.length === 0 ? \"Complete\" : \"Incomplete\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c8cf9dea-4e68-488f-90b6-e31196f72730",
+      "name": "Document Verification Engine"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "Education Loan Application Status",
+        "message": "=Hello {{$json.studentName}},  Your education loan application is currently {{$json.status}}.  Missing Documents: - {{$json.missingDocuments.join('\\n- ')}}  Regards, EduLoan AI Assistant",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "33fc1720-b24b-4cab-8332-2b17604612e9",
+      "name": "Send Status Email",
+      "webhookId": "02087080-fd19-424f-91c7-bef62a92ae5c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wgmiZJ8timnIOZoO",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QYXQxQhoh3IonpycnRjwweIzisITpVfO1EWPn4hcSIc",
+          "mode": "list",
+          "cachedResultName": "EduLoan Dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QYXQxQhoh3IonpycnRjwweIzisITpVfO1EWPn4hcSIc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QYXQxQhoh3IonpycnRjwweIzisITpVfO1EWPn4hcSIc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Student Name": "={{ $json.studentName }}",
+            "Email": "={{ $json.email }}",
+            "Status": "={{ $json.status }}",
+            "Missing Documents": "={{ $json.missingDocuments.join(', ') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Student Name",
+              "displayName": "Student Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing Documents",
+              "displayName": "Missing Documents",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        0
+      ],
+      "id": "48cea7a1-0c92-4e24-b5b3-9f820fa27fcc",
+      "name": "Update Dashboard",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nXuWxqrcr2isS7OW",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Form Submission Trigger": {
+      "main": [
+        [
+          {
+            "node": "Document Verification Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Verification Engine": {
+      "main": [
+        [
+          {
+            "node": "Send Status Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Status Email": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fc1d6594-037f-409c-9466-d46b3741ab84",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0d6f9e547cee90e991928903849836a3f9c4336516db4545feb2d5b9cdcf2dc8"
+  },
+  "nodeGroups": [],
+  "id": "rMeMLFMAyikFsqJC",
+  "tags": []
+}
